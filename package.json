@@ -1,0 +1,56 @@
+{
+  "name": "verificar-curp",
+  "version": "1.0.0",
+  "description": "SDK oficial de Verificar CURP: valida la estructura de una CURP, cotéjala con los datos de la persona y verifícala en el registro RENAPO.",
+  "keywords": [
+    "CURP",
+    "RENAPO",
+    "validar CURP",
+    "verificar CURP",
+    "consultar CURP",
+    "Mexico",
+    "KYC",
+    "identidad",
+    "API"
+  ],
+  "homepage": "https://verificarcurp.com/docs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rcfrias/verificar-curp-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rcfrias/verificar-curp-js/issues"
+  },
+  "license": "MIT",
+  "author": "Verificar CURP (https://verificarcurp.com)",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  }
+}
