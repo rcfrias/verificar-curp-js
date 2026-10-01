@@ -1,5 +1,7 @@
 import { VerificarCurpError } from './errors.js'
 import type {
+  CaptureLink,
+  CreateCaptureLinkInput,
   ValidateInput,
   ValidateResult,
   VerificarCurpOptions,
@@ -114,6 +116,39 @@ export class VerificarCurpClient {
   async getBalance(): Promise<number> {
     const body = await this.request('/balance', { method: 'GET' })
     return Number((body as { balance: number }).balance)
+  }
+
+  /**
+   * Crea un enlace de un solo uso para que tu cliente escriba su CURP desde su
+   * celular. Crearlo no cuesta; cada respuesta del cliente cuesta 1 token (hasta
+   * 3 intentos) y solo una CURP válida que coincide llega a `destinationId`.
+   *
+   * @throws {VerificarCurpError} `DESTINATION_NOT_FOUND`, `INVALID_PERSONA`,
+   *   `TOO_MANY_LIVE_LINKS`, etc. Revisa `error.code`.
+   */
+  async createCaptureLink(input: CreateCaptureLinkInput): Promise<CaptureLink> {
+    if (!input || !input.destinationId) {
+      throw new VerificarCurpError('Falta `destinationId`.', 'INVALID_INPUT')
+    }
+    const payload: Record<string, unknown> = { destinationId: input.destinationId }
+    if (input.persona !== undefined) payload.persona = input.persona
+    if (input.askGuestPersona) payload.askGuestPersona = true
+    if (input.reference !== undefined) payload.reference = input.reference
+    if (input.requesterName !== undefined) payload.requesterName = input.requesterName
+    if (input.name !== undefined) payload.name = input.name
+
+    const body = (await this.request('/capture-links', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })) as CaptureLink
+    return {
+      id: body.id,
+      url: body.url,
+      reference: body.reference ?? null,
+      askGuestPersona: body.askGuestPersona,
+      expiresAt: body.expiresAt,
+    }
   }
 
   private async request(path: string, init: RequestInit): Promise<unknown> {

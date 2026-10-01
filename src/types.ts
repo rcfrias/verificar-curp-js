@@ -169,7 +169,42 @@ export interface VerificationStatusResult {
   valores?: RegistryValues
 }
 
+/** Parámetros de `client.createCaptureLink()`. */
+export interface CreateCaptureLinkInput {
+  /** Destino (webhook, correo o chat) que recibe el resultado (requerido). */
+  destinationId: string
+  /**
+   * Los datos de la reservación, si los tienes. La CURP que escriba tu cliente
+   * se coteja contra ellos (`cotejo_reserva`); si no coincide, se le pide acudir
+   * a recepción, sin mostrarle tus datos.
+   */
+  persona?: Persona
+  /** Pide también nombre, primer apellido y fecha de nacimiento al cliente (`cotejo`). Default `false`. */
+  askGuestPersona?: boolean
+  /** Tu referencia (folio, reservación), máx. 80 caracteres. Viaja en la entrega. */
+  reference?: string
+  /** Nombre de negocio que ve tu cliente, máx. 60 caracteres. Por omisión, el de tu cuenta. */
+  requesterName?: string
+  /** Etiqueta interna del enlace en tu panel, máx. 60 caracteres. */
+  name?: string
+}
+
+/** Enlace de captura recién creado. */
+export interface CaptureLink {
+  id: string
+  /**
+   * URL para tu cliente. Contiene un token de acceso y solo se devuelve UNA
+   * vez: trátala como una credencial y no la registres en logs.
+   */
+  url: string
+  reference: string | null
+  askGuestPersona: boolean
+  /** Fecha límite (ISO 8601) para abrir el enlace. */
+  expiresAt: string
+}
+
 export type WebhookEvent =
+  | 'extraction.completed'
   | 'curp.verification.completed'
   | 'curp.verification.failed'
   | 'curp.verification.retrying'
@@ -181,12 +216,16 @@ export interface WebhookEnvelope {
   event: WebhookEvent | (string & {})
   idempotencyKey: string
   documentType: 'curp'
-  source: 'api' | 'web'
+  /** `'capture-link'` cuando viene de un enlace de captura (evento `extraction.completed`). */
+  source: 'api' | 'web' | 'capture-link'
   captureLinkId: string | null
   reference: string | null
   extractedAt: string
   /**
-   * `completed`: los campos de RegistryValues. `failed`: `estatus: SIN_RESPUESTA`
+   * `extraction.completed` (enlace de captura): `curp`, `valida`, `fecha_nacimiento`,
+   * `sexo`, `clave_entidad`, `entidad` y, según lo que pediste, `cotejo`,
+   * `cotejo_<campo>`, `cotejo_reserva`, `cotejo_reserva_<campo>`.
+   * `curp.verification.completed`: los campos de RegistryValues. `failed`: `estatus: SIN_RESPUESTA`
    * y `motivo`. `retrying` / `manual_review`: avance del trabajo. Todo es texto.
    */
   data: Record<string, string>

@@ -174,3 +174,55 @@ test('parseWebhook returns the envelope or throws INVALID_SIGNATURE', async () =
     code: 'INVALID_SIGNATURE',
   })
 })
+
+test('createCaptureLink posts only what was given and maps the link', async () => {
+  const link = {
+    success: true,
+    id: 'clx_1',
+    url: 'https://verificarcurp.com/c/tok',
+    reference: 'reserva-8841',
+    documentType: null,
+    requireBack: false,
+    askGuestPersona: false,
+    expiresAt: '2026-10-01T18:00:00.000Z',
+  }
+  const fetchImpl = fakeFetch(jsonResponse(201, link))
+  const client = new VerificarCurpClient({ apiKey: 'k', fetch: fetchImpl })
+
+  const input = {
+    destinationId: 'dst_1',
+    reference: 'reserva-8841',
+    persona: { nombres: 'Julio', segundoApellido: null },
+  }
+  const result = await client.createCaptureLink(input)
+  assert.deepEqual(result, {
+    id: 'clx_1',
+    url: link.url,
+    reference: 'reserva-8841',
+    askGuestPersona: false,
+    expiresAt: link.expiresAt,
+  })
+
+  const { url, init } = fetchImpl.calls[0]
+  assert.equal(url, 'https://verificarcurp.com/api/v1/capture-links')
+  assert.equal(init.method, 'POST')
+  assert.deepEqual(JSON.parse(init.body), input)
+})
+
+test('createCaptureLink refuses a missing destinationId before calling the API', async () => {
+  const fetchImpl = fakeFetch(jsonResponse(201, {}))
+  const client = new VerificarCurpClient({ apiKey: 'k', fetch: fetchImpl })
+  await assert.rejects(client.createCaptureLink({}), { code: 'INVALID_INPUT' })
+  assert.equal(fetchImpl.calls.length, 0)
+})
+
+test('createCaptureLink surfaces the server code', async () => {
+  const fetchImpl = fakeFetch(
+    jsonResponse(400, { success: false, error: 'demasiados', code: 'TOO_MANY_LIVE_LINKS' })
+  )
+  const client = new VerificarCurpClient({ apiKey: 'k', fetch: fetchImpl })
+  await assert.rejects(client.createCaptureLink({ destinationId: 'dst_1' }), {
+    code: 'TOO_MANY_LIVE_LINKS',
+    status: 400,
+  })
+})
