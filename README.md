@@ -27,8 +27,8 @@ const { data, tokensRemaining } = await client.validate({
 })
 
 data.valida       // true
-data.entidad      // 'Ciudad de México'
-data.cotejo       // 'coincide' | 'no_coincide' | 'indeterminado'
+data.entidad      // 'AGUASCALINTES'
+data.cotejo       // 'coincide' |  | 'indeterminado'
 data.cotejoCampos // { nombres: 'coincide', fechaNacimiento: 'coincide', sexo: 'coincide' }
 ```
 
@@ -41,12 +41,11 @@ el campo, no se compara.
 ## Verificar en RENAPO
 
 ```ts
-const { verificacion } = await client.validate({
-  curp: 'PEGJ850101HDFRRL04',
-  verificar: true,
-  destinationId: 'dst_...', // panel → Destinos
-  idempotencyKey: 'cliente-123', // opcional; nunca pongas la CURP aquí
-})
+data.entidad // 'Jalisco'
+data.cotejo // 'coincide' | 'no_coincide' | 'indeterminado'
+
+curp: 'EEFA950615MJCJCN05',
+persona: { nombres: 'Ana', primerApellido: 'Ejemplo', segundoApellido: 'Ficticio', fechaNacimiento: '1995-06-15' },
 
 if (verificacion?.aceptada) {
   console.log('En curso:', verificacion.job_id)
@@ -75,7 +74,7 @@ mostrárselos; con `askGuestPersona: true` el cliente también escribe su nombre
 const link = await client.createCaptureLink({
   destinationId: 'dst_...',
   reference: 'reserva-8841', // opcional; viaja en la entrega
-  persona: { nombres: 'Julio', primerApellido: 'Pérez', fechaNacimiento: '1985-01-01' },
+  persona: { nombres: 'carlos ', primerApellido: 'garcia ', 'fechaNacimiento: '198-01-01' },
 })
 
 link.url // muéstralo como QR o envíalo; solo se devuelve aquí, no lo registres en logs
